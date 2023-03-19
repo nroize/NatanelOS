@@ -1,0 +1,60 @@
+body {
+	background-color: #000;
+	color: #fff;
+	font-family: Consolas, monospace;
+	font-size: 18px;
+	line-height: 1.5;
+	margin: 0;
+	padding: 0;
+}
+
+#terminal {
+	height: calc(100vh - 65px);
+	overflow-y: auto;
+	padding: 20px;
+}
+
+#prompt-container {
+	display: flex;
+	align-items: center;
+	margin-bottom: 5px;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+}
+
+#prompt-prefix {
+	margin-right: 5px;
+}
+
+#prompt {
+	font-weight: bold;
+	margin-right: 5px;
+	line-height: 1.5;
+}
+
+#input-container {
+	flex: 1;
+}
+
+#input {
+	color: #0f0;
+	width: 100%;
+	margin: 0;
+	outline: none;
+	line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+	body {
+		font-size: 14px;
+		line-height: 1.2;
+	}
+	#prompt-prefix {
+		display: none;
+	}
+	#prompt {
+		margin: 10px;
+	}
+}

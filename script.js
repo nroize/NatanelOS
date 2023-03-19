@@ -87,17 +87,21 @@ const commands = {
             print(` • ${tech}`);
         }
     },
+    resume: () => {
+        window.open("Natanel Roizenman resume.pdf", "_blank").focus();
+    },
     git: (project_name) => {
         let url = projects[project_name].link || "";
         if (url) {
             print("Opening in a new window...");
-            window.open(projects[project_name].link, '_blank').focus();
+            window.open(projects[project_name].link, "_blank").focus();
         } else {
             print("There is no GitHub link available for this project.");
         }
     },
 	help: () => {
 		print("Available commands:");
+        print(" • resume – Opens my resume.")
         print(" • projects project_name - Gives a list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
         print(" • git project_name - Opens the GitHub page for the project, if it exists.");
 		print(" • ver - Display the version of NatanelOS.");

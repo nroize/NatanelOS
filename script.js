@@ -56,18 +56,6 @@ const projects = {
 };
 
 const commands = {
-	ver: () => {
-		print(version);
-	},
-    vim: () => {
-        print("emacs better.");
-    },
-    nano: () => {
-        print("vim better.");
-    },
-    emacs: () => {
-        print("vim better.");
-    },
     contact: () => {
         window.open("mailto:nroizenm@uwaterloo.ca", "_blank").focus();
     },
@@ -98,9 +86,6 @@ const commands = {
             print(` • ${tech}`);
         }
     },
-    ilysm: () => {
-        print("I love you too :)");
-    },
     resume: () => {
         window.open("Natanel Roizenman resume.pdf", "_blank").focus();
     },
@@ -126,7 +111,28 @@ const commands = {
         print(" • intro - See the intro message again.");
         print(" • ver - Display the version of NatanelOS.");
 		print(" • help - Displays available commands.");
-	}
+	},
+    ilysm: () => {
+        print("I love you too :)");
+    },
+    ver: () => {
+		print(version);
+	},
+    vim: () => {
+        print("emacs better.");
+    },
+    nano: () => {
+        print("vim better.");
+    },
+    emacs: () => {
+        print("vim better.");
+    },
+    whoami: () => {
+        print("Hello, Elliot.")
+    },
+    helloworld: () => {
+        print("Hello, World!");
+    }
 };
 
 function handleCommand(input) {

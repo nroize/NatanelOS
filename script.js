@@ -164,8 +164,6 @@ function resizeTerminal() {
     const terminal = document.getElementById("terminal");
     const inputContainer = document.getElementById("input-container");
 
-    console.log(promptContainerHeight);
-
     terminal.style.height = `${windowHeight - promptContainerHeight - inputContainerHeight}px`;
     terminal.style.paddingBottom = `${promptContainerHeight - 10}px`;
     inputContainer.style.top = `${terminal.offsetHeight}px`;
@@ -212,7 +210,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             commandPlace -= 1;
         }
-        input.innerText = commands[commandPlace];
+        input.innerText = prevCommands[commandPlace];
+      }
+
+      if (event.key === "ArrowDown") {
+        if (commandPlace >= (prevCommands.length - 1)) {
+            commandPlace = 0;
+        } else {
+            commandPlace += 1;
+        }
+        input.innerText = prevCommands[commandPlace];
       }
     });
   });

@@ -101,9 +101,13 @@ const commands = {
     birds : () => {
         window.open("https://instagram.com/nroize", "_blank").focus();
     },
+    linkedin : () => {
+        window.open("https://linkedin.com/in/nroize", "_blank").focus();
+    },
 	help: () => {
 		print("Available commands:");
-        print(" • resume – Opens my resume.")
+        print(" • resume – Opens my resume.");
+        print(" • linkedin - Opens my LinkedIn.");
         print(" • projects project_name - Gives a list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
         print(" • git project_name - Opens the GitHub page for the project, if it exists.");
 		print(" • birds - See my bird photography (Instagram).")

@@ -1,4 +1,4 @@
-const version = "NatanelOS [Version 0.0.0.1]";
+const version = "NatanelOS [Version 0.0.0.2]";
 const directory = "C:\\users\\guest";
 const asciiArt = "  _   _       _                   _ \n | \\ | |     | |                 | |\n |  \\| | __ _| |_ __ _ _ __   ___| |\n | . ` |/ _` | __/ _` | '_ \\ / _ \\ |\n | |\\  | (_| | || (_| | | | |  __/ |\n |_| \\_|\\__,_|\\__\\__,_|_| |_|\\___|_| ";
 const intro = "Hi, I'm Natanel Roizenman! Welcome to NatanelOS, my portfolio website. I'm a computer engineering student at the University of Waterloo. I'm passionate about embedded systems, low-level programming, and anything tech. If you want to send me an email, type 'contact'.\n\nType 'help' to see what other commands are available. Have fun exploring my site!";
@@ -88,14 +88,21 @@ const commands = {
     },
     resume: () => {
         window.open("Natanel Roizenman resume.pdf", "_blank").focus();
+        print("Opening in a new tab...")
     },
     git: (project_name) => {
         try {
             window.open(projects[project_name].link, "_blank").focus();
-            print("Opening in a new window...");
+            print("Opening in a new tab...");
         } catch (e) {
             print("There is no GitHub link available for this project.");
         }
+    },
+    clear: () => {
+        document.getElementById("terminal").innerText = "";
+        print(version);
+        print(asciiArt);
+        print(intro);
     },
     echo : (text) => {
         print(text);
@@ -108,15 +115,16 @@ const commands = {
     },
 	help: () => {
 		print("Available commands:");
-        print(" • resume – Opens my resume.");
-        print(" • linkedin - Opens my LinkedIn.");
-        print(" • projects project_name - Gives a list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
-        print(" • git project_name - Opens the GitHub page for the project, if it exists.");
-		print(" • birds - See my bird photography (Instagram).")
-        print(" • contact - Reach me via email.");
-        print(" • intro - See the intro message again.");
-        print(" • ver - Display the version of NatanelOS.");
-		print(" • help - Displays available commands.");
+        print(" • resume (r) – Open my resume.");
+        print(" • linkedin (l) - Open my LinkedIn.");
+        print(" • projects (p) project_name - A list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
+        print(" • git (g) project_name - Open the GitHub page for the project, if it exists.");
+		print(" • birds (b) - See my bird photography (Instagram).")
+        print(" • contact (c) - Reach me via email.");
+        print(" • clear (cl) - Clear the terminal window.")
+        print(" • intro (i) - See the intro message again.");
+        print(" • ver (v) - Display the version of NatanelOS.");
+		print(" • help (h) - Display available commands.");
 	},
     ilysm: () => {
         print("I love you too :)");
@@ -141,9 +149,27 @@ const commands = {
     }
 };
 
+const aliases = {
+    "r": "resume",
+    "l": "linkedin",
+    "p": "projects",
+    "g": "git",
+    "b": "birds",
+    "c": "contact",
+    "cl": "clear",
+    "i": "intro",
+    "v": "ver",
+    "h": "help"
+}
+
 function handleCommand(input) {
 	const args = input.split(/\s+/);
-	const cmd = args.shift().toLowerCase();
+	let cmd = args.shift().toLowerCase();
+
+    if (aliases.hasOwnProperty(cmd)) {
+        cmd = aliases[cmd];
+    }
+
 	if (commands.hasOwnProperty(cmd)) {
 		commands[cmd](args);
 	} else if (input.trim() === "") {

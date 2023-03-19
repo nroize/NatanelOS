@@ -17,11 +17,11 @@ body {
 #prompt-container {
 	display: flex;
 	align-items: center;
-	margin-bottom: 5px;
 	position: fixed;
 	bottom: 0;
 	left: 0;
 	width: 100%;
+	background-color: black;
 }
 
 #prompt-prefix {

@@ -1,7 +1,9 @@
 const version = "NatanelOS [Version 0.0.0.1]";
 const directory = "C:\\users\\guest";
 const asciiArt = "  _   _       _                   _ \n | \\ | |     | |                 | |\n |  \\| | __ _| |_ __ _ _ __   ___| |\n | . ` |/ _` | __/ _` | '_ \\ / _ \\ |\n | |\\  | (_| | || (_| | | | |  __/ |\n |_| \\_|\\__,_|\\__\\__,_|_| |_|\\___|_| ";
-const intro = "Hi, I'm Natanel Roizenman! Welcome to NatanelOS, my portfolio website. I'm a computer engineering student at the University of Waterloo. I'm passionate about embedded systems, low-level programming, and anything tech. If you want to send me an email, type 'contact'.\n\nType 'help' to see what other commands are available. Have fun exploring my site!"
+const intro = "Hi, I'm Natanel Roizenman! Welcome to NatanelOS, my portfolio website. I'm a computer engineering student at the University of Waterloo. I'm passionate about embedded systems, low-level programming, and anything tech. If you want to send me an email, type 'contact'.\n\nType 'help' to see what other commands are available. Have fun exploring my site!";
+var prevCommands = [];
+var commandPlace = -1;
 
 const projects = {
     ereader: {
@@ -57,6 +59,15 @@ const commands = {
 	ver: () => {
 		print(version);
 	},
+    vim: () => {
+        print("emacs better.");
+    },
+    nano: () => {
+        print("vim better.");
+    },
+    emacs: () => {
+        print("vim better.");
+    },
     contact: () => {
         window.open("mailto:nroizenm@uwaterloo.ca", "_blank").focus();
     },
@@ -78,7 +89,7 @@ const commands = {
     },
     project: (project_name) => {
         if (!(project_name in projects)) {
-            print("Sorry, that project doesn't exist. If you think it's something I should work on, feel free to leave a suggestion for me using the contact command.");
+            print("Sorry, that project doesn't exist. If you think it's something I should work on, feel free to leave a suggestion for me using the contact command.\n\nTo get a list of all projects, type 'projects'.");
             return;
         }
         print(projects[project_name].description);
@@ -86,6 +97,9 @@ const commands = {
         for (const tech of projects[project_name].stack) {
             print(` • ${tech}`);
         }
+    },
+    ilysm: () => {
+        print("I love you too :)");
     },
     resume: () => {
         window.open("Natanel Roizenman resume.pdf", "_blank").focus();
@@ -137,7 +151,23 @@ function print(text, command="", color="#fff") {
 
     terminal.appendChild(pre);
     terminal.scrollTop = terminal.scrollHeight;
-  }
+}
+
+function resizeTerminal() {
+    const windowHeight = window.innerHeight;
+    const promptContainerHeight = document.getElementById("prompt-container").offsetHeight;
+    const inputContainerHeight = document.getElementById("input-container").offsetHeight;
+    const terminal = document.getElementById("terminal");
+    const inputContainer = document.getElementById("input-container");
+
+    terminal.style.height = `${windowHeight - promptContainerHeight - inputContainerHeight}px`;
+    inputContainer.style.top = `${terminal.offsetHeight}px`;
+}
+
+
+resizeTerminal();
+window.addEventListener("resize", resizeTerminal);
+  
 
 document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("input");
@@ -154,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.focus();
       }
     });
+
   
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -162,8 +193,19 @@ document.addEventListener("DOMContentLoaded", () => {
         input.innerText = "";
         print(`${prompt.innerText}`, ` ${command}`);
         handleCommand(command);
+        prevCommands.push(command);
+        commandPlace = -1;
         prompt.innerText = `${directory}>`;
         input.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+      }
+
+      if (event.key === "ArrowUp") {
+        if (commandPlace <= 0) {
+            commandPlace = prevCommands.length - 1;
+        } else {
+            commandPlace -= 1;
+        }
+        input.innerText = commands[commandPlace];
       }
     });
   });

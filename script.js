@@ -41,14 +41,15 @@ const projects = {
         ],
         link: "https://github.com/nroize/AimTrainer"
     },
-    website: {
+    natanelos: {
         description: "This website!",
         stack: [
             "JavaScript",
             "HTML/CSS",
             "Netlify",
             "git"
-        ]
+        ],
+        link: "https://github.com/nroize/NatanelOS"
     }
 };
 

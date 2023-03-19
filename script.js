@@ -120,7 +120,7 @@ const commands = {
         print(" • git project_name - Opens the GitHub page for the project, if it exists.");
 		print(" • ver - Display the version of NatanelOS.");
         print(" • contact - Reach me via email.");
-        print(" • intro - See the intro message again.").
+        print(" • intro - See the intro message again.");
 		print(" • help - Display this help message.");
 	}
 };
@@ -137,7 +137,7 @@ function handleCommand(input) {
 	}
 }
 
-function print(text, command="", color="#fff") {
+function print(text, command="") {
     const terminal = document.getElementById("terminal");
     const pre = document.createElement("pre");
     const span = document.createElement("span");
@@ -160,7 +160,10 @@ function resizeTerminal() {
     const terminal = document.getElementById("terminal");
     const inputContainer = document.getElementById("input-container");
 
+    console.log(promptContainerHeight);
+
     terminal.style.height = `${windowHeight - promptContainerHeight - inputContainerHeight}px`;
+    terminal.style.paddingBottom = `${promptContainerHeight - 10}px`;
     inputContainer.style.top = `${terminal.offsetHeight}px`;
 }
 

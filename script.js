@@ -113,15 +113,19 @@ const commands = {
             print("There is no GitHub link available for this project.");
         }
     },
+    birds : () => {
+        window.open("https://instagram.com/nroize", "_blank").focus();
+    },
 	help: () => {
 		print("Available commands:");
         print(" • resume – Opens my resume.")
         print(" • projects project_name - Gives a list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
         print(" • git project_name - Opens the GitHub page for the project, if it exists.");
-		print(" • ver - Display the version of NatanelOS.");
+		print(" • birds - See my bird photography (Instagram).")
         print(" • contact - Reach me via email.");
         print(" • intro - See the intro message again.");
-		print(" • help - Display this help message.");
+        print(" • ver - Display the version of NatanelOS.");
+		print(" • help - Displays available commands.");
 	}
 };
 

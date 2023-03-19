@@ -90,13 +90,15 @@ const commands = {
         window.open("Natanel Roizenman resume.pdf", "_blank").focus();
     },
     git: (project_name) => {
-        let url = projects[project_name].link || "";
-        if (url) {
-            print("Opening in a new window...");
+        try {
             window.open(projects[project_name].link, "_blank").focus();
-        } else {
+            print("Opening in a new window...");
+        } catch (e) {
             print("There is no GitHub link available for this project.");
         }
+    },
+    echo : (text) => {
+        print(text);
     },
     birds : () => {
         window.open("https://instagram.com/nroize", "_blank").focus();

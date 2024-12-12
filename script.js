@@ -87,7 +87,7 @@ const commands = {
         }
     },
     resume: () => {
-        window.open("Natanel Roizenman resume.pdf", "_blank").focus();
+        window.open("NatanelRoizenman.pdf", "_blank").focus();
         print("Opening in a new tab...")
     },
     git: (project_name) => {

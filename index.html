@@ -1,48 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>NatanelOS</title>
-	<!-- SEO -->
-	<meta name="description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta name="keywords" content="Natanel Roizenman, portfolio, computer engineering, projects, skills, University of Waterloo">
-	<meta name="author" content="Natanel Roizenman">
-	<meta name="robots" content="index, follow">
-	<link rel="canonical" href="https://natanel.ca">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NatanelOS</title>
+  <!-- SEO -->
+  <meta name="description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
+  <meta name="keywords" content="Natanel Roizenman, portfolio, computer engineering, projects, skills, University of Waterloo">
+  <meta name="author" content="Natanel Roizenman">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://natanel.ca">
 
-	<!-- Social media -->
-	<meta property="og:title" content="Natanel Roizenman | Portfolio">
-	<meta property="og:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta property="og:url" content="https://natanel.ca">
-	<meta property="og:image" content="https://natanel.ca/images/head.png">
-	<meta property="og:type" content="website">	
+  <!-- Social media -->
+  <meta property="og:title" content="Natanel Roizenman | Portfolio">
+  <meta property="og:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
+  <meta property="og:url" content="https://natanel.ca">
+  <meta property="og:image" content="https://natanel.ca/images/head.png">
+  <meta property="og:type" content="website">
 
-	<!-- Twitter -->
-	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:title" content="Natanel Roizenman | Portfolio">
-	<meta name="twitter:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta name="twitter:image" content="https://natanel.ca/images/head.png">	
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Natanel Roizenman | Portfolio">
+  <meta name="twitter:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
+  <meta name="twitter:image" content="https://natanel.ca/images/head.png">
 
-	<link rel="stylesheet" href="style.css">
-	<link rel="icon" href="images/icon.png" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  <link rel="icon" href="images/icon.png" type="image/x-icon">
 </head>
-<body class="gui-mode">
-        <div id="app"></div>
-        <div id="cli-container" style="display:none;">
-                <div id="terminal"></div>
-                <div id="prompt-container">
-                        <span id="prompt"></span>
-                        <div id="input-container">
-                                <span id="input" contenteditable></span>
-                        </div>
-                </div>
-        </div>
+<body class="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <div id="app"></div>
+  <div id="cli-container" class="hidden flex flex-col h-screen bg-black text-green-400 font-mono text-sm md:text-base">
+    <div id="terminal" class="flex-1 overflow-y-auto p-4"></div>
+    <div id="prompt-container" class="flex items-center w-full px-4 py-2 bg-black bg-opacity-70">
+      <span id="prompt" class="mr-2"></span>
+      <span id="input" class="flex-1 outline-none" contenteditable></span>
+    </div>
+  </div>
 
-        <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-        <script src="script.js"></script>
-        <script type="text/babel" src="app.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="script.js"></script>
+  <script type="text/babel" src="app.js"></script>
 </body>
 </html>

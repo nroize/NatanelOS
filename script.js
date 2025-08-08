@@ -197,23 +197,6 @@ function print(text, command="") {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-function resizeTerminal() {
-    const windowHeight = window.innerHeight;
-    const promptContainerHeight = document.getElementById("prompt-container").offsetHeight;
-    const inputContainerHeight = document.getElementById("input-container").offsetHeight;
-    const terminal = document.getElementById("terminal");
-    const inputContainer = document.getElementById("input-container");
-
-    terminal.style.height = `${windowHeight - promptContainerHeight - inputContainerHeight}px`;
-    terminal.style.paddingBottom = `${promptContainerHeight - 10}px`;
-    inputContainer.style.top = `${terminal.offsetHeight}px`;
-}
-
-
-resizeTerminal();
-window.addEventListener("resize", resizeTerminal);
-  
-
 document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("input");
     const prompt = document.getElementById("prompt");

@@ -1,0 +1,11 @@
+{
+  "name": "natanelos",
+  "version": "1.0.0",
+  "description": "Natanel Roizenman's portfolio website",
+  "scripts": {
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [],
+  "author": "Natanel Roizenman",
+  "license": "MIT"
+}

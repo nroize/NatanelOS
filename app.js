@@ -21,13 +21,15 @@ function App() {
 
   return (
     <>
-        <button
-          id="theme-toggle"
-          className="fixed top-4 left-4 z-50 rounded-md bg-gray-200 px-4 py-2 text-gray-800 shadow hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
-          onClick={() => setIsDark(!isDark)}
-        >
-          {isDark ? 'Light Mode' : 'Dark Mode'}
-        </button>
+        {!isCli && (
+          <button
+            id="theme-toggle"
+            className="fixed top-4 left-4 z-50 rounded-md bg-gray-200 px-4 py-2 text-gray-800 shadow hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+            onClick={() => setIsDark(!isDark)}
+          >
+            {isDark ? 'Light Mode' : 'Dark Mode'}
+          </button>
+        )}
         <button
           id="mode-toggle"
           className="fixed top-4 right-4 z-50 rounded-md bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -36,8 +38,8 @@ function App() {
           {isCli ? 'Switch to GUI' : 'Switch to CLI'}
         </button>
       {!isCli && (
-        <div className="mx-auto mt-16 max-w-3xl rounded-xl bg-white shadow-lg dark:bg-gray-800">
-          <div className="flex items-center h-8 rounded-t-xl bg-gray-200 px-3 dark:bg-gray-700">
+        <div className="mx-auto mt-16 max-w-3xl rounded-xl border border-white/30 bg-white/60 shadow-xl backdrop-blur-xl dark:border-gray-700/40 dark:bg-gray-800/40">
+          <div className="flex h-8 items-center rounded-t-xl border-b border-white/30 bg-gray-200/60 px-3 backdrop-blur-md dark:border-gray-700/40 dark:bg-gray-700/50">
             <div className="flex space-x-2">
               <span className="h-3 w-3 rounded-full bg-red-500"></span>
               <span className="h-3 w-3 rounded-full bg-yellow-500"></span>

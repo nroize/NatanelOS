@@ -56,49 +56,58 @@ const projects = {
         link: "https://github.com/nroize/NatanelOS"
     }
 };
+const resources = {
+    resume: "NatanelRoizenman.pdf",
+    linkedin: "https://linkedin.com/in/nroize",
+    birds: "https://instagram.com/nroize",
+    contact: "mailto:nroizenm@uwaterloo.ca"
+};
 
 const commands = {
-    contact: () => {
-        window.open("mailto:nroizenm@uwaterloo.ca", "_blank").focus();
-    },
-    intro: () => {
-        print(intro);
+    help: () => {
+        print("Available commands:");
+        print(" • ls – list projects");
+        print(" • cat <project> – show project details");
+        print(" • open <project|resume|linkedin|birds|contact> – open link in new tab");
+        print(" • clear – reset the terminal");
+        print(" • contact – reach me via email");
+        print(" • intro – show the intro message");
+        print(" • ver – display the version of NatanelOS");
     },
     ls: () => {
-        for (const project in projects) {
-            print(project);
-        }
+        Object.keys(projects).forEach(p => print(p));
     },
-    cd: (project_name) => commands.project(project_name),
-    projects: (project_name="") => {
-        if (project_name.length == 0) {
-            commands.ls();
+    cat: ([name]) => {
+        if (!name || !projects[name]) {
+            print("usage: cat <project>");
             return;
         }
-        commands.project(project_name);
-    },
-    project: (project_name) => {
-        if (!(project_name in projects)) {
-            print("Sorry, that project doesn't exist. If you think it's something I should work on, feel free to leave a suggestion for me using the contact command.\n\nTo get a list of all projects, type 'projects'.");
-            return;
-        }
-        print(projects[project_name].description);
-        print("Technologies used:")
-        for (const tech of projects[project_name].stack) {
+        print(projects[name].description);
+        print("Technologies used:");
+        for (const tech of projects[name].stack) {
             print(` • ${tech}`);
         }
     },
-    resume: () => {
-        window.open("NatanelRoizenman.pdf", "_blank").focus();
-        print("Opening in a new tab...")
-    },
-    git: (project_name) => {
-        try {
-            window.open(projects[project_name].link, "_blank").focus();
-            print("Opening in a new tab...");
-        } catch (e) {
-            print("There is no GitHub link available for this project.");
+    open: ([name]) => {
+        if (!name) {
+            print("usage: open <project|resource>");
+            return;
         }
+        if (projects[name] && projects[name].link) {
+            window.open(projects[name].link, "_blank").focus();
+            print("Opening in a new tab...");
+        } else if (resources[name]) {
+            window.open(resources[name], "_blank").focus();
+            print("Opening in a new tab...");
+        } else {
+            print("No link available for " + name + ".");
+        }
+    },
+    resume: () => commands.open(["resume"]),
+    linkedin: () => commands.open(["linkedin"]),
+    birds: () => commands.open(["birds"]),
+    contact: () => {
+        window.open(resources.contact, "_blank").focus();
     },
     clear: () => {
         document.getElementById("terminal").innerText = "";
@@ -106,34 +115,18 @@ const commands = {
         print(asciiArt);
         print(intro);
     },
-    echo : (text) => {
-        print(text);
+    echo: (args) => {
+        print(args.join(" "));
     },
-    birds : () => {
-        window.open("https://instagram.com/nroize", "_blank").focus();
+    intro: () => {
+        print(intro);
     },
-    linkedin : () => {
-        window.open("https://linkedin.com/in/nroize", "_blank").focus();
+    ver: () => {
+        print(version);
     },
-	help: () => {
-		print("Available commands:");
-        print(" • resume (r) – Open my resume.");
-        print(" • linkedin (l) - Open my LinkedIn.");
-        print(" • projects (p) project_name - A list of my projects if no name is provided. Otherwise, gives a detailed description of the project, including technologies used.");
-        print(" • git (g) project_name - Open the GitHub page for the project, if it exists.");
-		print(" • birds (b) - See my bird photography (Instagram).")
-        print(" • contact (c) - Reach me via email.");
-        print(" • clear (cl) - Clear the terminal window.")
-        print(" • intro (i) - See the intro message again.");
-        print(" • ver (v) - Display the version of NatanelOS.");
-		print(" • help (h) - Display available commands.");
-	},
     ilysm: () => {
         print("I love you too :)");
     },
-    ver: () => {
-		print(version);
-	},
     vim: () => {
         print("emacs better.");
     },
@@ -144,7 +137,7 @@ const commands = {
         print("vim better.");
     },
     whoami: () => {
-        print("Hello, Elliot.")
+        print("Hello, Elliot.");
     },
     helloworld: () => {
         print("Hello, World!");
@@ -152,17 +145,14 @@ const commands = {
 };
 
 const aliases = {
-    "r": "resume",
-    "l": "linkedin",
-    "p": "projects",
-    "g": "git",
-    "b": "birds",
-    "c": "contact",
-    "cl": "clear",
-    "i": "intro",
-    "v": "ver",
-  "h": "help"
-}
+    r: "resume",
+    l: "linkedin",
+    b: "birds",
+    c: "contact",
+    v: "ver",
+    h: "help",
+    o: "open"
+};
 
 const allCommands = [...new Set([...Object.keys(commands), ...Object.keys(aliases)])];
 
@@ -251,8 +241,12 @@ document.addEventListener("DOMContentLoaded", () => {
           matches = allCommands.filter(cmd => cmd.startsWith(current));
         } else {
           const cmd = aliases[parts[0]] ? aliases[parts[0]] : parts[0];
-          if (["cd", "project", "projects", "git"].includes(cmd)) {
-            matches = Object.keys(projects).filter(p => p.startsWith(current));
+          if (["cat", "open"].includes(cmd)) {
+            matches = Object.keys(projects);
+            if (cmd === "open") {
+              matches = matches.concat(Object.keys(resources));
+            }
+            matches = matches.filter(p => p.startsWith(current));
           }
         }
         if (matches.length === 1) {
@@ -291,4 +285,3 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-  

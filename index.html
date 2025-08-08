@@ -27,15 +27,22 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="icon" href="images/icon.png" type="image/x-icon">
 </head>
-<body>
-	<div id="terminal"></div>
-	<div id="prompt-container">
-		<span id="prompt">&gt;</span>
-		<div id="input-container">
-			<span id="input" contenteditable></span>
-		</div>
-	</div>
+<body class="gui-mode">
+        <div id="app"></div>
+        <div id="cli-container" style="display:none;">
+                <div id="terminal"></div>
+                <div id="prompt-container">
+                        <span id="prompt"></span>
+                        <div id="input-container">
+                                <span id="input" contenteditable></span>
+                        </div>
+                </div>
+        </div>
 
-	<script src="script.js"></script>
+        <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <script src="script.js"></script>
+        <script type="text/babel" src="app.js"></script>
 </body>
 </html>

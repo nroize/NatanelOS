@@ -1,5 +1,7 @@
-const version = "NatanelOS [Version 0.0.0.3]";
-const directory = "C:\\users\\guest";
+const version = "NatanelOS 0.0.0.3";
+const user = "guest";
+const machine = "NatanelOS";
+const directory = "~";
 const asciiArt = "  _   _       _                   _ \n | \\ | |     | |                 | |\n |  \\| | __ _| |_ __ _ _ __   ___| |\n | . ` |/ _` | __/ _` | '_ \\ / _ \\ |\n | |\\  | (_| | || (_| | | | |  __/ |\n |_| \\_|\\__,_|\\__\\__,_|_| |_|\\___|_| ";
 const intro = "Hi, I'm Natanel Roizenman! Welcome to NatanelOS, my portfolio website. I'm a computer engineering student at the University of Waterloo. I'm passionate about embedded systems, low-level programming, and anything tech. If you want to send me an email, type 'contact'.\n\nType 'help' or 'h' to see what other commands are available. Have fun exploring my site!";
 var prevCommands = [];
@@ -174,9 +176,9 @@ function handleCommand(input) {
 		commands[cmd](args);
 	} else if (input.trim() === "") {
 		// Do nothing
-	} else {
-		print(`'${cmd}' is not recognized as an internal or external command, operable program or batch file.`);
-	}
+          } else {
+                  print(`zsh: command not found: ${cmd}`);
+          }
 }
 
 function print(text, command="") {
@@ -220,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
     print(intro);
   
     input.focus();
-    prompt.innerText = `${directory}>`;
+      prompt.innerText = `${user}@${machine} ${directory} %`;
   
     document.addEventListener("click", (event) => {
       if (!prompt.contains(event.target)) {
@@ -238,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
         handleCommand(command);
         prevCommands.push(command);
         commandPlace = -1;
-        prompt.innerText = `${directory}>`;
+          prompt.innerText = `${user}@${machine} ${directory} %`;
         input.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
       }
 

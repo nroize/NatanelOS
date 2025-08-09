@@ -1,41 +1,218 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>NatanelOS</title>
-	<!-- SEO -->
-	<meta name="description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta name="keywords" content="Natanel Roizenman, portfolio, computer engineering, projects, skills, University of Waterloo">
-	<meta name="author" content="Natanel Roizenman">
-	<meta name="robots" content="index, follow">
-	<link rel="canonical" href="https://natanel.ca">
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NatanelOS</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="images/icon.png" type="image/x-icon">  
+  </head>
+  <body>
+    <!-- Top navigation bar similar to macOS -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <!-- Simple logo icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+        </svg>
+        <span>NatOS</span>
+      </div>
+      <div class="topbar-right">
+        <span id="topbar-time"></span>
+        <!-- Theme toggle button: switches between light and dark mode -->
+        <button id="theme-toggle" aria-label="Toggle dark mode" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-left:0.75rem;">
+          <!-- Default icon is sun (will switch to moon in dark mode) -->
+          <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 1v2" />
+            <path d="M12 21v2" />
+            <path d="M4.22 4.22l1.42 1.42" />
+            <path d="M18.36 18.36l1.42 1.42" />
+            <path d="M1 12h2" />
+            <path d="M21 12h2" />
+            <path d="M4.22 19.78l1.42-1.42" />
+            <path d="M18.36 5.64l1.42-1.42" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Desktop icons are hidden in this version; the dock below is the main launcher -->
+    <div class="desktop"></div>
+    
+    <!-- About window -->
+    <div class="window" id="about-window">
+      <div class="window-header">
+        <!-- macOS‑style traffic lights: red closes the window; yellow and green are decorative -->
+        <div class="traffic-lights">
+          <!-- Use buttons for all three traffic lights. Buttons have larger
+               hit areas than spans and work more reliably for click events.
+               The red button still uses the "window-close" class so the
+               existing close logic applies. -->
+          <button class="window-close" aria-label="Close"></button>
+          <button class="traffic-dot yellow" aria-label="Minimize"></button>
+          <button class="traffic-dot green" aria-label="Maximize"></button>
+        </div>
+        <span class="window-title">About Me</span>
+      </div>
+      <div class="window-content">
+        <h2>About Me</h2>
+        <p>Hi, I'm <strong>Natanel Roizenman</strong>! Welcome to my simplified portfolio site.</p>
+        <p>I'm a computer engineering student at the University of Waterloo with a passion for embedded systems, low‑level programming and anything tech. In my spare time I love tinkering with microcontrollers, building small operating systems and exploring the intersection of hardware and software.</p>
+      </div>
+      <!-- Resize handle for bottom‑right corner -->
+      <div class="resize-handle"></div>
+    </div>
 
-	<!-- Social media -->
-	<meta property="og:title" content="Natanel Roizenman | Portfolio">
-	<meta property="og:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta property="og:url" content="https://natanel.ca">
-	<meta property="og:image" content="https://natanel.ca/images/head.png">
-	<meta property="og:type" content="website">	
+    <!-- Projects window -->
+    <div class="window" id="projects-window">
+      <div class="window-header">
+        <div class="traffic-lights">
+          <button class="window-close" aria-label="Close"></button>
+          <button class="traffic-dot yellow" aria-label="Minimize"></button>
+          <button class="traffic-dot green" aria-label="Maximize"></button>
+        </div>
+        <span class="window-title">Projects</span>
+      </div>
+      <div class="window-content">
+        <h2>Projects</h2>
+        <p>Here are some of my public projects. These span scripting, tooling, game development and embedded firmware, and all of them are available on my GitHub (<em>nroize</em>).</p>
+        <ul>
+          <li>
+            <strong>NatanelOS:</strong> this, an interactive portfolio modeled to look like a browser‑based operating system. It features a command‑line terminal, windowed UI and even a virtual file system to explore my work.
+          </li>
+          <li>
+            <strong>Mosylite:</strong> a lightweight Python wrapper for the Mosyle Manager API that helps integrate Apple device management into automation scripts.
+          </li>
+          <li>
+            <strong>AimTrainer:</strong> a simple aim training game written in Java to improve mouse accuracy and reaction time.
+          </li>
+          <li>
+            <strong>PyEdsby:</strong> a Python library for building integrations with the Edsby Student Information System.
+          </li>
+          <li>
+            <strong>Automated birdfeeder:</strong> embedded firmware and supporting code for an automated bird feeder project built using microcontrollers and sensors.
+          </li>
+          <li>
+            <strong>CFX‑800:</strong> a replacement PCB for the Casio DBC‑611 watch that adds CFX‑400‑like capabilities (e.g. scientific calculations, logarithms, etc.).
+          </li>
+        </ul>
+        <p>All of these projects and more can be found on <a href="https://github.com/nroize">my GitHub profile</a>.</p>
+      </div>
+      <!-- Resize handle -->
+      <div class="resize-handle"></div>
+    </div>
 
-	<!-- Twitter -->
-	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:title" content="Natanel Roizenman | Portfolio">
-	<meta name="twitter:description" content="Natanel Roizenman's portfolio website showcasing his projects and skills in computer engineering.">
-	<meta name="twitter:image" content="https://natanel.ca/images/head.png">	
+    <!-- Contact window -->
+    <div class="window" id="contact-window">
+      <div class="window-header">
+        <div class="traffic-lights">
+          <button class="window-close" aria-label="Close"></button>
+          <button class="traffic-dot yellow" aria-label="Minimize"></button>
+          <button class="traffic-dot green" aria-label="Maximize"></button>
+        </div>
+        <span class="window-title">Contact</span>
+      </div>
+      <div class="window-content">
+        <h2>Get in touch</h2>
+        <p>If you'd like to connect, feel free to reach out via any of the channels below:</p>
+        <ul>
+          <li>GitHub: <a href="https://github.com/nroize" target="_blank" rel="noopener">@nroize</a></li>
+          <li>LinkedIn: <a href="https://www.linkedin.com/in/nroize" target="_blank" rel="noopener">Natanel Roizenman</a></li>
+        </ul>
+      </div>
+      <!-- Resize handle -->
+      <div class="resize-handle"></div>
+    </div>
 
-	<link rel="stylesheet" href="style.css">
-	<link rel="icon" href="images/icon.png" type="image/x-icon">
-</head>
-<body>
-	<div id="terminal"></div>
-	<div id="prompt-container">
-		<span id="prompt">&gt;</span>
-		<div id="input-container">
-			<span id="input" contenteditable></span>
-		</div>
-	</div>
+    <!-- Terminal window -->
+    <div class="window" id="terminal-window">
+      <div class="window-header">
+        <div class="traffic-lights">
+          <button class="window-close" aria-label="Close"></button>
+          <button class="traffic-dot yellow" aria-label="Minimize"></button>
+          <button class="traffic-dot green" aria-label="Maximize"></button>
+        </div>
+        <span class="window-title">Terminal</span>
+      </div>
+      <div class="window-content terminal">
+        <div class="terminal-output" id="terminal-output"></div>
+        <div class="terminal-input">
+          <span id="terminal-prompt" class="terminal-prompt"></span>
+          <input type="text" id="terminal-input-field" class="terminal-input-field" autocomplete="off" />
+        </div>
+      </div>
+      <!-- Resize handle -->
+      <div class="resize-handle"></div>
+    </div>
 
-	<script src="script.js"></script>
-</body>
+    <!-- Resume window: displays a PDF resume within an iframe. A button allows
+         opening the PDF in a new tab. -->
+    <div class="window" id="resume-window">
+      <div class="window-header">
+        <div class="traffic-lights">
+          <button class="window-close" aria-label="Close"></button>
+          <button class="traffic-dot yellow" aria-label="Minimize"></button>
+          <button class="traffic-dot green" aria-label="Maximize"></button>
+        </div>
+        <span class="window-title">Resume</span>
+      </div>
+      <div class="window-content resume-content">
+        <p>Your browser can view PDF files directly. Use the viewer below to read my resume.</p>
+        <iframe id="resume-frame" src="Natanel_Roizenman_Resume.pdf" style="width:100%; height: calc(100% - 3rem); border:none;"></iframe>
+        <button id="resume-open-btn" class="resume-open-btn" style="margin-top:0.5rem;">Open in new tab</button>
+      </div>
+      <div class="resize-handle"></div>
+    </div>
+
+    <!-- Dock at the bottom for launching apps -->
+    <div class="dock">
+      <!-- About -->
+      <div class="dock-icon" data-window="about-window" title="About">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M5.5 21c1.5-4 5-6 6.5-6s5 2 6.5 6" />
+        </svg>
+        <span class="dock-label">About</span>
+      </div>
+      <!-- Projects -->
+      <div class="dock-icon" data-window="projects-window" title="Projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7h5l2 2h11v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+        </svg>
+        <span class="dock-label">Projects</span>
+      </div>
+      <!-- Contact -->
+      <div class="dock-icon" data-window="contact-window" title="Contact">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+          <polyline points="22,6 12,13 2,6" />
+        </svg>
+        <span class="dock-label">Contact</span>
+      </div>
+      <!-- Terminal -->
+      <div class="dock-icon" data-window="terminal-window" title="Terminal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="14" rx="2" ry="2" />
+          <line x1="8" y1="17" x2="16" y2="17" />
+          <polyline points="8,9 10,11 8,13" />
+          <line x1="14" y1="13" x2="14" y2="13" />
+        </svg>
+        <span class="dock-label">Terminal</span>
+      </div>
+
+      <!-- Resume icon in dock -->
+      <div class="dock-icon" data-window="resume-window" title="Resume">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+          <line x1="9" y1="8" x2="15" y2="8" />
+          <line x1="9" y1="12" x2="15" y2="12" />
+          <line x1="9" y1="16" x2="13" y2="16" />
+        </svg>
+        <span class="dock-label">Resume</span>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>

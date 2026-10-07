@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RPC Print Estimator</title>
+<meta name="description" content="Drop a 3D model to estimate what it costs to print at the University of Waterloo Rapid Prototyping Centre.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: two-pane workbench. Left = build plate viewer + mesh readout, right = price slip + print settings. Stacks below 900px. */
+  :root {
+    --bg: #eceff0;
+    --surface: #fafbfb;
+    --stage: #dfe4e6;
+    --ink: #14191c;
+    --muted: #5a656c;
+    --line: #cfd6d9;
+    --accent: #0a7466;
+    --accent-soft: #d5ebe7;
+    --accent-ink: #ffffff;
+    --warn: #b0570a;
+    --warn-soft: #f6e5d3;
+    --ok: #2f7a3a;
+    --model: #8fa3ad;
+    --grid: #b4bfc4;
+    --plate: #cdd5d8;
+    --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1315; --surface: #171c1f; --stage: #13181a; --ink: #e6ebed; --muted: #8f9ca3;
+      --line: #2a3236; --accent: #3cc2ab; --accent-soft: #143430; --accent-ink: #062019;
+      --warn: #f0a24c; --warn-soft: #3a2812; --ok: #6cc77a; --model: #9fb4be; --grid: #36424a; --plate: #1d2427;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1315; --surface: #171c1f; --stage: #13181a; --ink: #e6ebed; --muted: #8f9ca3;
+    --line: #2a3236; --accent: #3cc2ab; --accent-soft: #143430; --accent-ink: #062019;
+    --warn: #f0a24c; --warn-soft: #3a2812; --ok: #6cc77a; --model: #9fb4be; --grid: #36424a; --plate: #1d2427;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 40px; display: grid; gap: 22px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+  h1 {
+    font-family: var(--font-display); font-weight: 750; font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.02em; line-height: 1; margin: 0; text-wrap: balance;
+  }
+  h1 span { color: var(--accent); }
+  .lede { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+  .rates-note { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  .app { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  @media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- Stage ---------- */
+  .stage-col { display: grid; gap: 12px; min-width: 0; }
+  .stage {
+    position: relative; aspect-ratio: 4 / 3; max-width: 100%; border-radius: var(--radius);
+    background: var(--stage); overflow: hidden; border: 1px solid var(--line);
+  }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .stage.dragging::after {
+    content: "Drop to estimate"; position: absolute; inset: 10px; border: 2px dashed var(--accent);
+    border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--stage) 80%, transparent);
+    font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent); pointer-events: none;
+  }
+  .stage-top {
+    position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 10px;
+    justify-content: space-between; align-items: start; pointer-events: none;
+  }
+  .stage-top > * { pointer-events: auto; }
+  .file-chip {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px;
+    min-width: 0; max-width: 70%; display: grid;
+  }
+  .file-chip strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-chip small { color: var(--muted); font-size: 12px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); }
+  .stage-hint {
+    position: absolute; left: 12px; bottom: 12px; right: 12px; font-size: 13px; color: var(--muted);
+    pointer-events: none; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .legend { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--warn); display: inline-block; }
+  .stage-msg {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted);
+  }
+
+  .btn {
+    font: inherit; font-weight: 600; font-size: 14px; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .readout {
+    display: flex; flex-wrap: wrap; gap: 1px; margin: 0;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .readout div { flex: 1 1 130px; background: var(--surface); padding: 10px 12px; min-width: 0; }
+  .readout dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .readout dd { margin: 2px 0 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; overflow-wrap: anywhere; }
+  .fit { display: inline-block; font-family: var(--font-body); font-size: 13px; font-weight: 600; }
+  .fit.ok { color: var(--ok); }
+  .fit.bad { color: var(--warn); }
+
+  .alert { border-radius: 8px; padding: 10px 12px; background: var(--warn-soft); color: var(--ink); font-size: 14px; }
+  .alert b { color: var(--warn); }
+
+  /* ---------- Price slip ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+  .slip { padding: 20px 20px 16px; border-bottom: 1px dashed var(--line); display: grid; gap: 4px; }
+  .slip-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .total {
+    font-family: var(--font-display); font-weight: 800; font-size: clamp(48px, 7vw, 64px);
+    letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .total small { font-size: 0.4em; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+  .slip-sub { color: var(--muted); font-size: 14px; }
+  .slip-range { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  .breakdown { margin: 12px 0 0; display: grid; gap: 0; font-size: 14px; }
+  .breakdown div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-top: 1px solid var(--line); }
+  .breakdown div:first-child { border-top: 0; }
+  .breakdown dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .breakdown dt { color: var(--muted); }
+  .breakdown .sum dt, .breakdown .sum dd { color: var(--ink); font-weight: 600; }
+
+  .settings { padding: 16px 20px 20px; display: grid; gap: 18px; }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 8px; }
+  legend, .field-label {
+    padding: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    display: flex; justify-content: space-between; width: 100%;
+  }
+  .field-label output { font-family: var(--font-mono); color: var(--ink); letter-spacing: 0; font-weight: 500; font-size: 13px; text-transform: none; }
+
+  .materials { display: grid; gap: 6px; }
+  .mat {
+    display: grid; grid-template-columns: 1fr auto; gap: 0 12px; align-items: center; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--surface);
+  }
+  .mat:hover { border-color: var(--muted); }
+  .mat:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .mat:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mat input { position: absolute; opacity: 0; pointer-events: none; }
+  .mat strong { font-weight: 600; }
+  .mat small { grid-column: 1; color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+  .mat .rate { grid-row: 1 / span 2; grid-column: 2; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg label { flex: 1; position: relative; }
+  .seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+  .seg span { display: block; text-align: center; padding: 7px 8px; font-size: 14px; border-left: 1px solid var(--line); }
+  .seg label:first-child span { border-left: 0; }
+  .seg input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -3px; }
+
+  .row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+  .ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+  select, input[type="number"] {
+    font: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; min-width: 0;
+  }
+  input[type="number"] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .qty { display: grid; grid-template-columns: 36px 1fr 36px; gap: 6px; }
+  .qty button {
+    font: inherit; font-size: 18px; line-height: 1; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; cursor: pointer;
+  }
+  .qty input { text-align: center; }
+  .help { font-size: 12.5px; color: var(--muted); margin: 0; }
+
+  footer { color: var(--muted); font-size: 13px; display: grid; gap: 6px; max-width: 80ch; }
+  footer p { margin: 0; }
+  footer a { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>RPC Print <span>Estimator</span></h1>
+      <p class="lede">Drop in a 3D model to estimate what it costs to print at Waterloo's Rapid Prototyping Centre (E5-2002). The centre charges by printed weight, supports included.</p>
+    </div>
+    <div class="rates-note">Rates checked Oct 2026</div>
+  </header>
+
+  <div class="app">
+    <section class="stage-col" aria-label="Model">
+      <div class="stage" id="stage">
+        <canvas id="view" aria-label="3D preview of the model on a 256 mm build plate"></canvas>
+        <div class="stage-msg" id="stageMsg" hidden></div>
+        <div class="stage-top">
+          <div class="file-chip">
+            <span class="tag" id="sampleTag">Example model</span>
+            <strong id="fileName">Pencil cup</strong>
+            <small id="fileMeta">—</small>
+          </div>
+          <button class="btn" id="pickBtn" type="button">Open file</button>
+          <input type="file" id="fileInput" accept=".stl,.3mf,.obj,.ply" hidden>
+        </div>
+        <div class="stage-hint">
+          <span>Drag a .stl, .3mf, .obj or .ply onto this panel. Drag to orbit, scroll to zoom.</span>
+          <span class="legend" id="legend"><i></i> Needs support</span>
+        </div>
+      </div>
+
+      <dl class="readout">
+        <div><dt>Size (X × Y × Z)</dt><dd id="rSize">—</dd></div>
+        <div><dt>Solid volume</dt><dd id="rVol">—</dd></div>
+        <div><dt>Surface area</dt><dd id="rArea">—</dd></div>
+        <div><dt>Overhangs</dt><dd id="rOver">—</dd></div>
+        <div><dt>Build plate</dt><dd id="rFit">—</dd></div>
+      </dl>
+
+      <div class="alert" id="alert" hidden></div>
+    </section>
+
+    <aside class="panel" aria-label="Estimate">
+      <div class="slip">
+        <span class="slip-label">Estimated cost</span>
+        <div class="total" id="total">$0.00<small>CAD</small></div>
+        <div class="slip-sub" id="totalSub">—</div>
+        <div class="slip-range" id="totalRange"></div>
+        <dl class="breakdown" id="breakdown"></dl>
+      </div>
+
+      <form class="settings" id="settings" onsubmit="return false">
+        <fieldset>
+          <legend>Filament</legend>
+          <div class="materials" id="materials"></div>
+        </fieldset>
+
+        <div>
+          <label class="field-label" for="infill">Infill density <output id="infillOut" for="infill">15%</output></label>
+          <input type="range" id="infill" min="0" max="100" step="5" value="15">
+          <div class="ticks"><span>0</span><span>15 default</span><span>50</span><span>100</span></div>
+        </div>
+
+        <div class="row2">
+          <fieldset>
+            <legend>Wall loops</legend>
+            <div class="seg">
+              <label><input type="radio" name="walls" value="2" checked><span>2</span></label>
+              <label><input type="radio" name="walls" value="3"><span>3</span></label>
+              <label><input type="radio" name="walls" value="4"><span>4</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Supports</legend>
+            <div class="seg">
+              <label><input type="radio" name="supports" value="off"><span>None</span></label>
+              <label><input type="radio" name="supports" value="auto" checked><span>Auto</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label class="field-label" for="qty">Copies</label>
+            <div class="qty">
+              <button type="button" id="qtyMinus" aria-label="One fewer copy">−</button>
+              <input type="number" id="qty" min="1" max="999" value="1" inputmode="numeric">
+              <button type="button" id="qtyPlus" aria-label="One more copy">+</button>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="slicerGrams">Slicer weight (g)</label>
+            <input type="number" id="slicerGrams" min="0" step="0.1" placeholder="Optional" inputmode="decimal">
+          </div>
+        </div>
+        <p class="help">Already sliced it in Bambu Studio? Enter the filament weight it reports and the estimate uses that number instead, since that is what you will be charged for.</p>
+
+        <div class="row2">
+          <div>
+            <label class="field-label" for="units">File units</label>
+            <select id="units">
+              <option value="1">Millimetres</option>
+              <option value="10">Centimetres</option>
+              <option value="25.4">Inches</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="upAxis">Up direction</label>
+            <select id="upAxis">
+              <option value="z">Z up (STL, 3MF)</option>
+              <option value="y">Y up (OBJ, Blender)</option>
+              <option value="x">X up</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <footer>
+    <p>Rates per gram are from the <a href="https://uwaterloo.ca/rapid-prototyping-centre/" target="_blank" rel="noopener">Rapid Prototyping Centre site</a>. PAHT-CF and multicolour are online orders only; the multicolour rate is the centre's stated average.</p>
+    <p>This is an unofficial estimate. Weight is modelled on Bambu Studio's 0.20 mm standard profile (0.42 mm lines, 5 top and 3 bottom layers, supports at 30° to a 15% grid). Supports are assumed to reach the build plate, so parts with internal overhangs may come in lighter. The slicer's weight on the day sets the real price.</p>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+// Rates from uwaterloo.ca/rapid-prototyping-centre (per gram, CAD). Densities are typical Bambu filament values.
+const MATERIALS = [
+  { id: 'pla',   name: 'PLA',         rate: 0.06, density: 1.24, note: 'Stiff and easy to print. The default choice.' },
+  { id: 'petg',  name: 'PETG',        rate: 0.07, density: 1.27, note: 'Tougher, more heat resistant.' },
+  { id: 'tpu',   name: 'TPU',         rate: 0.08, density: 1.22, note: 'Flexible, rubber-like.' },
+  { id: 'paht',  name: 'PAHT-CF',     rate: 0.13, density: 1.06, note: 'Carbon-fibre nylon on the X1C. Online orders only.' },
+  { id: 'multi', name: 'Multicolour', rate: 0.08, density: 1.24, note: 'Average rate on the H2D. Online orders only. Colour-change purge not included.', approx: true },
+];
+
+// Approximates Bambu Studio "0.20mm Standard" with a 0.4 mm nozzle.
+const PROFILE = {
+  wallLine: 0.43,        // mm per wall loop (0.42 outer, 0.45 inner)
+  topShell: 1.0,         // 5 layers × 0.2
+  bottomShell: 0.6,      // 3 layers × 0.2
+  supportAngle: 30,      // degrees from horizontal
+  supportDensity: 0.15,  // base pattern fill
+  interfaceDepth: 0.4,   // 2 interface layers
+  interfaceDensity: 0.46,
+  minSupportHeight: 0.3,
+};
+const PLATE = 256; // P1S / P2S build volume, mm
+
+const $ = id => document.getElementById(id);
+const state = { raw: null, name: '', isSample: true, pos: null, stats: null };
+
+// ---------- Materials UI ----------
+$('materials').innerHTML = MATERIALS.map((m, i) => `
+  <label class="mat">
+    <input type="radio" name="material" value="${m.id}" ${i === 0 ? 'checked' : ''}>
+    <strong>${m.name}</strong>
+    <small>${m.note}</small>
+    <span class="rate">${m.approx ? '~' : ''}$${m.rate.toFixed(2)}/g</span>
+  </label>`).join('');
+
+// ---------- Geometry ----------
+function toPositions(obj) {
+  if (obj.isBufferGeometry) obj = new THREE.Mesh(obj);
+  obj.updateMatrixWorld(true);
+  const chunks = [];
+  let n = 0;
+  obj.traverse(o => {
+    if (!o.isMesh || !o.geometry?.attributes?.position) return;
+    const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    g.applyMatrix4(o.matrixWorld);
+    const a = g.attributes.position.array;
+    const usable = a.length - (a.length % 9);
+    chunks.push(usable === a.length ? a : a.subarray(0, usable));
+    n += usable;
+  });
+  const out = new Float32Array(n);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
+// File coordinates -> print coordinates (mm, Z up, centred on plate, sitting at z = 0)
+function transform(raw, scale, axis) {
+  const p = new Float32Array(raw.length);
+  let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let i = 0; i < raw.length; i += 3) {
+    const x = raw[i] * scale, y = raw[i + 1] * scale, z = raw[i + 2] * scale;
+    let px, py, pz;
+    if (axis === 'y') { px = x; py = -z; pz = y; }
+    else if (axis === 'x') { px = y; py = z; pz = x; }
+    else { px = x; py = y; pz = z; }
+    p[i] = px; p[i + 1] = py; p[i + 2] = pz;
+    if (px < minX) minX = px; if (px > maxX) maxX = px;
+    if (py < minY) minY = py; if (py > maxY) maxY = py;
+    if (pz < minZ) minZ = pz;
+  }
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  for (let i = 0; i < p.length; i += 3) { p[i] -= cx; p[i + 1] -= cy; p[i + 2] -= minZ; }
+  return p;
+}
+
+function analyze(p) {
+  const tris = p.length / 9;
+  let vol = 0;
+  let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  for (let i = 0; i < p.length; i += 9) {
+    const x0 = p[i], y0 = p[i + 1], z0 = p[i + 2];
+    const x1 = p[i + 3], y1 = p[i + 4], z1 = p[i + 5];
+    const x2 = p[i + 6], y2 = p[i + 7], z2 = p[i + 8];
+    vol += (x0 * (y1 * z2 - z1 * y2) - y0 * (x1 * z2 - z1 * x2) + z0 * (x1 * y2 - y1 * x2)) / 6;
+    for (let k = 0; k < 9; k += 3) {
+      const x = p[i + k], y = p[i + k + 1], z = p[i + k + 2];
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+      if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+    }
+  }
+  // Inside-out meshes give a negative volume; flip normals to match.
+  const sign = vol < 0 ? -1 : 1;
+  const cosT = Math.cos(PROFILE.supportAngle * Math.PI / 180);
+  const flags = new Uint8Array(tris);
+  let area = 0, up = 0, down = 0, side = 0, overhang = 0, supBase = 0, supIface = 0;
+  for (let t = 0, i = 0; t < tris; t++, i += 9) {
+    const ux = p[i + 3] - p[i], uy = p[i + 4] - p[i + 1], uz = p[i + 5] - p[i + 2];
+    const vx = p[i + 6] - p[i], vy = p[i + 7] - p[i + 1], vz = p[i + 8] - p[i + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const len = Math.hypot(nx, ny, nz);
+    if (len === 0) continue;
+    const a = len / 2;
+    const z = sign * nz / len;
+    area += a;
+    if (z > 0) up += a * z; else down += a * -z;
+    side += a * (1 - Math.abs(z));
+    if (z < -cosT) {
+      const h = (p[i + 2] + p[i + 5] + p[i + 8]) / 3 - minZ;
+      if (h > PROFILE.minSupportHeight) {
+        const proj = a * -z;
+        overhang += proj;
+        supBase += proj * h;
+        supIface += proj * Math.min(h, PROFILE.interfaceDepth);
+        flags[t] = 1;
+      }
+    }
+  }
+  return {
+    tris, volume: Math.abs(vol), area, up, down, side, overhang, flags,
+    supportVolume: supBase * PROFILE.supportDensity + supIface * PROFILE.interfaceDensity,
+    size: [maxX - minX, maxY - minY, maxZ - minZ],
+  };
+}
+
+function estimate(stats, mat, infill, walls, supports) {
+  const shellRaw = stats.up * PROFILE.topShell + stats.down * PROFILE.bottomShell + stats.side * walls * PROFILE.wallLine;
+  const shell = Math.min(stats.volume, shellRaw);
+  const infillVol = (stats.volume - shell) * infill;
+  const supVol = supports ? stats.supportVolume : 0;
+  const g = v => v / 1000 * mat.density;
+  const out = { shell: g(shell), infill: g(infillVol), support: g(supVol) };
+  out.total = out.shell + out.infill + out.support;
+  return out;
+}
+
+// ---------- Viewer ----------
+const canvas = $('view');
+const stage = $('stage');
+let renderer, scene, camera, controls, world, mesh, grid, plate;
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function initViewer() {
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  } catch (e) {
+    showStageMsg('The 3D preview needs WebGL, which this browser has turned off. The estimate still works.');
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x556677, 1.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(180, 320, 220);
+  scene.add(sun);
+  world = new THREE.Group();
+  world.rotation.x = -Math.PI / 2; // print Z -> screen up
+  scene.add(world);
+  buildPlate();
+  new ResizeObserver(resize).observe(stage);
+  resize();
+  renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+}
+
+function buildPlate() {
+  if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+  if (plate) { scene.remove(plate); plate.geometry.dispose(); plate.material.dispose(); }
+  const gc = new THREE.Color(cssVar('--grid'));
+  grid = new THREE.GridHelper(PLATE, 16, gc, gc);
+  grid.position.y = 0.05;
+  plate = new THREE.Mesh(
+    new THREE.PlaneGeometry(PLATE, PLATE),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(cssVar('--plate')) })
+  );
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.y = -0.05;
+  scene.add(plate, grid);
+}
+
+function resize() {
+  if (!renderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function showModel(pos, stats) {
+  if (!renderer) return;
+  if (mesh) { world.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.length), 3));
+  g.computeVertexNormals();
+  mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.65, metalness: 0, side: THREE.DoubleSide }));
+  world.add(mesh);
+  paintModel();
+  const [dx, dy, dz] = stats.size;
+  const size = Math.max(dx, dy, dz, 1);
+  const dist = size * 2.3 + 10;
+  controls.target.set(0, dz / 2, 0);
+  camera.position.set(dist * 0.7, dz / 2 + dist * 0.5, dist * 0.85);
+  camera.near = Math.max(0.05, size / 500);
+  camera.far = dist * 20 + 2000;
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+
+function paintModel() {
+  if (!mesh || !state.stats) return;
+  const base = new THREE.Color(cssVar('--model'));
+  const warn = new THREE.Color(cssVar('--warn'));
+  const showSupports = supportsOn();
+  const col = mesh.geometry.attributes.color;
+  const arr = col.array;
+  const flags = state.stats.flags;
+  for (let t = 0; t < flags.length; t++) {
+    const c = showSupports && flags[t] ? warn : base;
+    for (let k = 0; k < 3; k++) {
+      const o = t * 9 + k * 3;
+      arr[o] = c.r; arr[o + 1] = c.g; arr[o + 2] = c.b;
+    }
+  }
+  col.needsUpdate = true;
+  $('legend').hidden = !showSupports || state.stats.overhang < 1;
+}
+
+function onThemeChange() {
+  if (!renderer) return;
+  buildPlate();
+  paintModel();
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onThemeChange);
+new MutationObserver(onThemeChange).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function showStageMsg(text) {
+  const el = $('stageMsg');
+  el.textContent = text;
+  el.hidden = !text;
+}
+
+// ---------- Pipeline ----------
+const supportsOn = () => document.querySelector('input[name="supports"]:checked').value === 'auto';
+const material = () => MATERIALS.find(m => m.id === document.querySelector('input[name="material"]:checked').value);
+const money = n => '$' + n.toFixed(2);
+const grams = n => (n >= 100 ? n.toFixed(0) : n.toFixed(1)) + ' g';
+const num = (n, d = 1) => n.toLocaleString('en-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function rebuild() {
+  if (!state.raw) return;
+  const scale = parseFloat($('units').value);
+  state.pos = transform(state.raw, scale, $('upAxis').value);
+  state.stats = analyze(state.pos);
+  const s = state.stats;
+
+  $('fileName').textContent = state.name;
+  $('sampleTag').hidden = !state.isSample;
+  $('fileMeta').textContent = `${s.tris.toLocaleString('en-CA')} triangles`;
+  $('rSize').textContent = s.size.map(v => num(v)).join(' × ') + ' mm';
+  $('rVol').textContent = num(s.volume / 1000, 2) + ' cm³';
+  $('rArea').textContent = num(s.area / 100, 1) + ' cm²';
+  $('rOver').textContent = num(s.overhang / 100, 1) + ' cm²';
+
+  const xy = [s.size[0], s.size[1]].sort((a, b) => b - a);
+  const fits = xy[0] <= PLATE && s.size[2] <= PLATE;
+  $('rFit').innerHTML = fits
+    ? '<span class="fit ok">Fits P1S / P2S</span>'
+    : '<span class="fit bad">Over 256 mm</span>';
+
+  showModel(state.pos, s);
+  updatePrice();
+}
+
+function updatePrice() {
+  const s = state.stats;
+  if (!s) return;
+  const mat = material();
+  const infill = parseInt($('infill').value, 10) / 100;
+  const walls = parseInt(document.querySelector('input[name="walls"]:checked').value, 10);
+  const est = estimate(s, mat, infill, walls, supportsOn());
+  const qty = Math.max(1, Math.min(999, parseInt($('qty').value, 10) || 1));
+  const override = parseFloat($('slicerGrams').value);
+  const useOverride = override > 0;
+  const perPart = useOverride ? override : est.total;
+  const cost = perPart * qty * mat.rate;
+
+  $('infillOut').textContent = Math.round(infill * 100) + '%';
+  $('total').innerHTML = `${money(cost)}<small>CAD</small>`;
+  $('totalSub').textContent = `${grams(perPart * qty)} of ${mat.name} at ${mat.approx ? '~' : ''}$${mat.rate.toFixed(2)}/g`
+    + (qty > 1 ? ` · ${qty} copies at ${money(perPart * mat.rate)} each` : '');
+  $('totalRange').textContent = useOverride
+    ? 'Using the weight you entered from the slicer.'
+    : `Likely ${money(cost * 0.85)} to ${money(cost * 1.15)} once sliced`;
+
+  const rows = useOverride
+    ? [['Slicer weight per copy', grams(override)]]
+    : [
+        ['Walls, top and bottom', grams(est.shell)],
+        [`Infill at ${Math.round(infill * 100)}%`, grams(est.infill)],
+        ['Supports', supportsOn() ? grams(est.support) : 'off'],
+      ];
+  rows.push(['Weight per copy', grams(perPart)]);
+  $('breakdown').innerHTML = rows.map(([k, v], i) =>
+    `<div class="${i === rows.length - 1 ? 'sum' : ''}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+
+  const notes = [];
+  if (s.volume < 1) notes.push('<b>No enclosed volume.</b> This mesh looks open or flat. Export it as a closed solid and try again.');
+  if (!supportsOn() && s.overhang > 100) notes.push(`<b>${num(s.overhang / 100)} cm² of overhangs.</b> These usually need supports, which add weight. Switch Supports to Auto to include them.`);
+  const maxDim = Math.max(...s.size);
+  if (maxDim > 0 && maxDim < 4 && $('units').value === '1') notes.push(`<b>Only ${num(maxDim)} mm across.</b> If this was modelled in inches or centimetres, change File units.`);
+  if (maxDim > PLATE) notes.push('<b>Larger than the 256 mm build volume.</b> Split the part or ask RPC staff about the larger printers.');
+  if (mat.id === 'multi') notes.push('<b>Multicolour prints</b> also purge filament at each colour change. Expect the real weight to be higher than this estimate.');
+  $('alert').innerHTML = notes.join('<br>');
+  $('alert').hidden = notes.length === 0;
+}
+
+// ---------- File loading ----------
+async function loadFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  showStageMsg('');
+  try {
+    let obj;
+    if (ext === 'stl') obj = new STLLoader().parse(await file.arrayBuffer());
+    else if (ext === 'obj') obj = new OBJLoader().parse(await file.text());
+    else if (ext === '3mf') obj = new ThreeMFLoader().parse(await file.arrayBuffer());
+    else if (ext === 'ply') obj = new PLYLoader().parse(await file.arrayBuffer());
+    else throw new Error(`.${ext} files aren't supported. Export as STL, 3MF, OBJ or PLY.`);
+    const raw = toPositions(obj);
+    if (raw.length < 9) throw new Error(`${file.name} has no triangles to print. It may be a point cloud or an empty export.`);
+    state.raw = raw;
+    state.name = file.name;
+    state.isSample = false;
+    $('upAxis').value = ext === 'obj' ? 'y' : 'z';
+    $('units').value = '1';
+    $('slicerGrams').value = '';
+    rebuild();
+  } catch (err) {
+    const msg = err?.message?.startsWith('.') || err?.message?.includes('has no triangles')
+      ? err.message
+      : `Couldn't read ${file.name}. The file may be damaged or in an unusual variant of the format.`;
+    $('alert').innerHTML = `<b>File not loaded.</b> ${msg}`;
+    $('alert').hidden = false;
+  }
+}
+
+$('pickBtn').addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadFile(f); e.target.value = ''; });
+
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; stage.classList.add('dragging'); });
+window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) stage.classList.remove('dragging'); });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  dragDepth = 0;
+  stage.classList.remove('dragging');
+  const f = e.dataTransfer?.files?.[0];
+  if (f) loadFile(f);
+});
+
+// ---------- Controls ----------
+$('settings').addEventListener('input', e => {
+  if (e.target.id === 'units' || e.target.id === 'upAxis') rebuild();
+  else { updatePrice(); if (e.target.name === 'supports') paintModel(); }
+});
+$('settings').addEventListener('change', e => {
+  if (e.target.name === 'supports') paintModel();
+});
+const stepQty = d => { $('qty').value = Math.max(1, Math.min(999, (parseInt($('qty').value, 10) || 1) + d)); updatePrice(); };
+$('qtyMinus').addEventListener('click', () => stepQty(-1));
+$('qtyPlus').addEventListener('click', () => stepQty(1));
+
+// ---------- Example model: a 68 × 68 × 90 mm pencil cup ----------
+function sampleCup() {
+  const profile = [[0, 0], [32, 0], [34, 90], [31, 90], [29.5, 4], [0, 4]].map(([r, h]) => new THREE.Vector2(r, h));
+  const g = new THREE.LatheGeometry(profile, 96);
+  g.rotateX(Math.PI / 2); // lathe axis Y -> Z
+  return toPositions(g);
+}
+
+initViewer();
+state.raw = sampleCup();
+state.name = 'Pencil cup';
+rebuild();
+</script>
+</body>
+</html>
